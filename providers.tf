@@ -1,4 +1,4 @@
-## ServiceNow Provider Configuration
+## ServiceNow Provider Configuration- Configures ServiceNow provider
 terraform {
   required_providers {
     servicenow = {
