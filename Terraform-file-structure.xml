@@ -1,4 +1,4 @@
-terraform-servicenow-cr/
+CR-Automation-Servicenow-API/
 │── modules/
 │   ├── servicenow_cr/
 │   │   ├── main.tf
