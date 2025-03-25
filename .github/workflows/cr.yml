@@ -1,0 +1,23 @@
+## GitHub Actions to Trigger CRs - Automatically creates a CR when a GitHub PR is opened 
+name: Create CR on PR
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  create-cr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform Init & Apply
+        env:
+          TF_VAR_servicenow_username: ${{ secrets.SNOW_USER }}
+          TF_VAR_servicenow_password: ${{ secrets.SNOW_PASS }}
+        run: |
+          terraform init
+          terraform apply -auto-approve
