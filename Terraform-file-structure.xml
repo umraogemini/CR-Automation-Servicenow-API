@@ -1,0 +1,12 @@
+terraform-servicenow-cr/
+│── modules/
+│   ├── servicenow_cr/
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   ├── outputs.tf
+│── main.tf
+│── variables.tf
+│── outputs.tf
+│── backend.tf
+│── providers.tf
+│── terraform.tfvars
