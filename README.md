@@ -40,3 +40,18 @@ pipeline {
 }
 
 
+
+-----------------------------------------------------------------------------------------------------------------
+
+
+Create a New Jenkins Pipeline
+Open Jenkins and go to Dashboard → New Item.
+
+Enter a name for your pipeline.
+
+Select "Pipeline" and click "OK."
+
+Go to the "Pipeline" section and select "Pipeline script from SCM".
+
+Choose "Git" and enter your GitHub repo URL.
+
