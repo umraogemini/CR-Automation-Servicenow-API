@@ -1,0 +1,138 @@
+Yes! You can set ServiceNow API username and password as environment variables in Windows Git Bash and use them with Terraform. 🚀🔒
+
+✅ How to Set Environment Variables in Windows Git Bash
+Git Bash follows the Linux-style export command for setting environment variables.
+
+🔹 1️⃣ Set Environment Variables Temporarily (Only for Current Session)
+Run these commands in Git Bash:
+
+sh
+Copy
+Edit
+export TF_VAR_servicenow_username="your-snow-username"
+export TF_VAR_servicenow_password="your-snow-password"
+🔹 These variables will be available only until you close Git Bash.
+
+🔹 2️⃣ Set Environment Variables Permanently (System-Wide)
+To make these environment variables persistent across reboots, follow these steps:
+
+A. Add to Windows System Environment Variables
+Open Command Prompt (cmd.exe) and run:
+
+cmd
+Copy
+Edit
+setx TF_VAR_servicenow_username "your-snow-username"
+setx TF_VAR_servicenow_password "your-snow-password"
+Close and reopen Git Bash to apply the changes.
+
+B. Add to Git Bash Profile (.bashrc or .bash_profile)
+Open Git Bash and edit the .bashrc file:
+
+sh
+Copy
+Edit
+nano ~/.bashrc
+Add these lines at the end of the file:
+
+sh
+Copy
+Edit
+export TF_VAR_servicenow_username="your-snow-username"
+export TF_VAR_servicenow_password="your-snow-password"
+Save and exit (CTRL + X, then Y, then Enter).
+
+Reload the file to apply changes:
+
+sh
+Copy
+Edit
+source ~/.bashrc
+✔ Now, every time you open Git Bash, the variables will be set automatically.
+
+🔥 Verifying Environment Variables
+After setting the variables, verify them in Git Bash:
+
+sh
+Copy
+Edit
+echo $TF_VAR_servicenow_username
+echo $TF_VAR_servicenow_password
+🚀 If Terraform picks them up, you’re all set! Need help with anything else? 😃
+
+
+
+
+
+
+
+You said:
+where to find .bashrc file path in gitbash
+
+
+ChatGPT said:
+In Git Bash, the .bashrc file is located in your home directory. You can find it using the following command:
+
+📍 Find .bashrc File Path in Git Bash
+sh
+Copy
+Edit
+echo $HOME
+This will return a path like:
+
+makefile
+Copy
+Edit
+C:\Users\YourUsername
+So, the full path of .bashrc in Windows will be:
+
+makefile
+Copy
+Edit
+C:\Users\YourUsername\.bashrc
+📂 Steps to Locate .bashrc in Git Bash
+1️⃣ Open Git Bash
+2️⃣ Run this command to go to the home directory:
+
+sh
+Copy
+Edit
+cd ~
+3️⃣ Check if .bashrc exists:
+
+sh
+Copy
+Edit
+ls -la
+If you see .bashrc, you can edit it. If not, create one:
+
+sh
+Copy
+Edit
+touch ~/.bashrc
+📝 How to Edit .bashrc in Git Bash
+Use Nano editor to edit:
+
+sh
+Copy
+Edit
+nano ~/.bashrc
+Or use Vim:
+
+sh
+Copy
+Edit
+vim ~/.bashrc
+After editing, apply changes with:
+
+sh
+Copy
+Edit
+source ~/.bashrc
+✔ Now, every time you open Git Bash, your environment variables will be set automatically! 🚀 Need more help? 😃
+
+
+
+
+
+
