@@ -1,0 +1,139 @@
+You can create a Jenkins pipeline to automate the deployment of your Terraform ServiceNow CR automation project. Here’s how you can do it step by step:
+
+1️⃣ Prerequisites
+Before setting up the pipeline, ensure you have: ✔️ Jenkins installed
+✔️ Terraform installed on the Jenkins agent
+✔️ AWS CLI installed (if using remote state in S3)
+✔️ GitHub credentials configured in Jenkins
+✔️ Jenkins plugins installed:
+
+Git Plugin
+
+Pipeline Plugin
+
+Terraform Plugin
+
+Email Plugin
+
+2️⃣ Create a New Jenkins Pipeline
+Open Jenkins and go to Dashboard → New Item.
+
+Enter a name for your pipeline.
+
+Select "Pipeline" and click "OK."
+
+Go to the "Pipeline" section and select "Pipeline script from SCM".
+
+Choose "Git" and enter your GitHub repo URL.
+
+3️⃣ Configure the Jenkinsfile
+The Jenkinsfile (already in your repo) will automate Terraform execution and send notifications.
+
+📌 Jenkinsfile (Updated)
+groovy
+Copy
+Edit
+pipeline {
+    agent any
+
+    environment {
+        SERVICENOW_INSTANCE = "https://gemini.service-now.com/servicenow"
+        TF_VAR_servicenow_username = credentials('SNOW_USER') // Jenkins credentials ID
+        TF_VAR_servicenow_password = credentials('SNOW_PASS') // Jenkins credentials ID
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/your-repo/terraform-servicenow-cr.git'
+            }
+        }
+
+        stage('Initialize Terraform') {
+            steps {
+                sh 'terraform init'
+            }
+        }
+
+        stage('Validate Terraform') {
+            steps {
+                sh 'terraform validate'
+            }
+        }
+
+        stage('Apply Terraform') {
+            steps {
+                sh 'terraform apply -auto-approve'
+            }
+        }
+
+        stage('Check CR Approval & Notify') {
+            steps {
+                script {
+                    def crStatus = sh(script: "curl -s -u '${env.TF_VAR_servicenow_username}:${env.TF_VAR_servicenow_password}' \
+                        -X GET '${SERVICENOW_INSTANCE}/api/now/table/change_request/${CR_ID}' \
+                        | jq -r '.result.state'", returnStdout: true).trim()
+
+                    if (crStatus == "approved") {
+                        emailext (
+                            subject: "Change Request ${CR_ID} Approved",
+                            body: """
+                                Hello Team,<br><br>
+                                The Change Request <b>${CR_ID}</b> has been <b>approved</b>.<br>
+                                Please proceed with the deployment.<br><br>
+                                Regards,<br>
+                                DevOps Team
+                            """,
+                            mimeType: 'text/html',
+                            to: 'team@example.com'
+                        )
+                    } else {
+                        echo "CR not approved yet!"
+                    }
+                }
+            }
+        }
+    }
+}
+4️⃣ Configure Jenkins Pipeline
+In Jenkins, go to Manage Jenkins → Configure System.
+
+Add your GitHub credentials under Manage Credentials.
+
+Under Build Triggers, enable "Poll SCM" (e.g., H/5 * * * * for every 5 minutes).
+
+Save and Run the pipeline.
+
+5️⃣ Verify the Execution
+Click on "Build Now" in Jenkins.
+
+Check the console logs for:
+
+terraform init
+
+terraform validate
+
+terraform apply
+
+CR Approval check
+
+Email notifications
+
+6️⃣ Automate Pipeline with GitHub Webhook (Optional)
+To trigger the pipeline automatically on GitHub PR or Push:
+
+Go to your GitHub repository:
+Settings → Webhooks → Add Webhook.
+
+Set:
+
+Payload URL = http://your-jenkins-server/github-webhook/
+
+Content type = application/json
+
+Select "Just the push event"
+
+Click Save.
+
+Now, every GitHub push or PR will trigger Jenkins automatically! 🎯
+
