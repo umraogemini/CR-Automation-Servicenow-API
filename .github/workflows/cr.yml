@@ -1,4 +1,4 @@
-// GitHub Actions for CR Creation - Automatically creates a CR when a GitHub PR is opened
+// File: .github/workflows/cr.yml
 name: Create CR on PR
 on:
   pull_request:
@@ -15,8 +15,6 @@ jobs:
         uses: hashicorp/setup-terraform@v2
 
       - name: Terraform Init & Apply
-        env:
-          TF_VAR_minion_api_token: ${{ secrets.MINION_API_TOKEN }}
         run: |
           terraform init
           terraform apply -auto-approve
