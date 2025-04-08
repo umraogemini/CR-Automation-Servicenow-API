@@ -15,6 +15,9 @@ jobs:
         uses: hashicorp/setup-terraform@v2
 
       - name: Terraform Init & Apply
+        env:
+          TF_VAR_servicenow_username: ${{ secrets.SNOW_USER }}
+          TF_VAR_servicenow_password: ${{ secrets.SNOW_PASS }}
         run: |
           terraform init
           terraform apply -auto-approve
