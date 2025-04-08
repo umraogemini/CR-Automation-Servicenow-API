@@ -1,5 +1,6 @@
 ## Variable Values - Stores sensitive credentials (use Vault, AWS Secrets Manager, etc.)
-servicenow_instance = "your-instance.service-now.com"
+servicenow_instance = "https://hsbcitidu.service-now.com/servicenow"
 servicenow_username = "your-username"
 servicenow_password = "your-password"
-assignment_group    = "ITSM Team"
+requested_by        = "uma.rao@noexternalmail.hsbc.com"
+assignment_group    = "ET-FINEX-BFF-PEAK-IT"
