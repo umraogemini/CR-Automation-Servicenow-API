@@ -1,9 +1,13 @@
 pipeline {
     agent any
+    parameters {
+        booleanParam(name: 'SKIP_CP_CHECK', defaultValue: false, description: 'Skip Change Request Approval Check'),
+            }
     environment {
         SERVICENOW_INSTANCE = "https://gemini.service-now.com/servicenow"
         TF_VAR_servicenow_username = credentials('SNOW_USER')
         TF_VAR_servicenow_password = credentials('SNOW_PASS')
+    MINION_API_URL=credentials('minion-api-url')
     }
     stages {
         stage('Terraform Apply') {
@@ -29,13 +33,18 @@ pipeline {
                                 DevOps Team
                             """,
                             mimeType: 'text/html',
-                            to: 'team@example.com'
+                            to: 'uma.rao@noextrnalmail.hsbc.com'
                         )
                     } else {
                         echo "CR not approved yet!"
                     }
                 }
             }
+        }
+    }
+    post {
+        always {
+            cleanWs()
         }
     }
 }
