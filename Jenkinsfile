@@ -1,30 +1,38 @@
-## Jenkins Pipeline for CR Automation -Automates CR creation & approval in Jenkins
 pipeline {
     agent any
     environment {
-        TF_VAR_servicenow_username = credentials('servicenow-user')
-        TF_VAR_servicenow_password = credentials('servicenow-pass')
+        SERVICENOW_INSTANCE = "https://gemini.service-now.com/servicenow"
+        TF_VAR_servicenow_username = credentials('SNOW_USER')
+        TF_VAR_servicenow_password = credentials('SNOW_PASS')
     }
     stages {
-        stage('Terraform Init') {
-            steps {
-                sh 'terraform init'
-            }
-        }
         stage('Terraform Apply') {
             steps {
                 sh 'terraform apply -auto-approve'
             }
         }
-        stage('Check CR Approval') {
+        stage('Check CR Approval & Notify') {
             steps {
                 script {
-                    def crState = sh(script: 'terraform output -raw cr_id', returnStdout: true).trim()
-                    if (crState == 'approved') {
-                        echo "CR Approved! Proceeding with Deployment..."
+                    def crStatus = sh(script: "curl -s -u '${env.TF_VAR_servicenow_username}:${env.TF_VAR_servicenow_password}' \
+                        -X GET '${SERVICENOW_INSTANCE}/api/now/table/change_request/${CR_ID}' \
+                        | jq -r '.result.state'", returnStdout: true).trim()
+
+                    if (crStatus == "approved") {
+                        emailext (
+                            subject: "Change Request ${CR_ID} Approved",
+                            body: """
+                                Hello Team,<br><br>
+                                The Change Request <b>${CR_ID}</b> has been <b>approved</b>.<br>
+                                Please proceed with the deployment.<br><br>
+                                Regards,<br>
+                                DevOps Team
+                            """,
+                            mimeType: 'text/html',
+                            to: 'team@example.com'
+                        )
                     } else {
-                        echo "CR Not Approved! Stopping Deployment..."
-                        error("Change Request not approved!")
+                        echo "CR not approved yet!"
                     }
                 }
             }
