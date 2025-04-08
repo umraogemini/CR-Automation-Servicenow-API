@@ -1,9 +1,11 @@
-// File: modules/servicenow_cr/main.tf
-resource "servicenow_change_request" "cr" {
-  short_description = var.short_description
-  description       = var.description
-  risk              = var.risk
-  impact            = var.impact
+// File: main.tf
+module "create_cr" {
+  source            = "./modules/servicenow_cr"
+  short_description = "Automated CR via Terraform"
+  description       = "Created for deployment automation"
+  category          = "Software"
+  risk              = "low"
+  impact            = "low"
   assignment_group  = var.assignment_group
   requested_by      = var.requested_by
 }
