@@ -9,14 +9,12 @@ variable "servicenow_username" {
   description = "ServiceNow API username"
   type        = string
   sensitive   = true
-  default     = "Will be set via Jenkins credentials"
 }
 
 variable "servicenow_password" {
   description = "ServiceNow API password"
   type        = string
   sensitive   = true
-  default     = "Will be set via Jenkins credentials"
 }
 
 variable "assignment_group" {
