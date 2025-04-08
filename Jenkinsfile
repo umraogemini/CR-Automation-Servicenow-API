@@ -1,5 +1,4 @@
-// Jenkins Pipeline for CR Automation - Automates CR creation & approval in Jenkins
-
+// File: Jenkinsfile
 pipeline {
     agent any
 
@@ -8,53 +7,39 @@ pipeline {
     }
 
     environment {
-        SERVICENOW_INSTANCE = 'https://gemini.service-now.com/servicenow'
-        CR_ID = 'CHANGE0012345'
-        TF_VAR_servicenow_username = credentials('servicenow-username')
-        TF_VAR_servicenow_password = credentials('servicenow-password')
-        MINION_API_URL = credentials('minion-api-url')  // If secured
+        SERVICENOW_INSTANCE = "https://gemini.service-now.com/servicenow"
+        TF_VAR_servicenow_username = credentials('SNOW_USER')
+        TF_VAR_servicenow_password = credentials('SNOW_PASS')
     }
 
     stages {
-        stage('Checkout Code') {
+        stage('Terraform Apply') {
             steps {
-                git 'https://github.com/your-repo/terraform-servicenow-cr.git'
-            }
-        }
-
-        stage('Initialize Terraform') {
-            steps {
-                sh 'terraform init'
-            }
-        }
-
-        stage('Plan Terraform') {
-            steps {
-                sh 'terraform plan -out=tfplan'
-            }
-        }
-
-        stage('Apply Terraform') {
-            steps {
-                sh 'terraform apply -auto-approve tfplan'
+                script {
+                    sh 'terraform apply -auto-approve'
+                    env.CR_ID = sh(script: "terraform output -raw cr_id", returnStdout: true).trim()
+                    echo "Captured CR ID: ${env.CR_ID}"
+                }
             }
         }
 
         stage('Check CR Approval & Notify') {
             when {
-                expression { return !params.SKIP_CR_CHECK }
+                expression { return !params.SKIP_CP_CHECK }
             }
             steps {
                 script {
                     def crStatus = sh(
-                        script: """curl -s -u "${env.TF_VAR_servicenow_username}:${env.TF_VAR_servicenow_password}" \
-                            -X GET "${env.SERVICENOW_INSTANCE}/api/now/table/change_request/${env.CR_ID}" \
-                            | jq -r '.result.state'""",
+                        script: "curl -s -u '${env.TF_VAR_servicenow_username}:${env.TF_VAR_servicenow_password}' " +
+                                "-X GET '${SERVICENOW_INSTANCE}/api/now/table/change_request/${env.CR_ID}' " +
+                                "| jq -r '.result.state'",
                         returnStdout: true
                     ).trim()
 
+                    echo "CR Status: ${crStatus}"
+
                     if (crStatus == "approved") {
-                        emailext(
+                        emailext (
                             subject: "Change Request ${env.CR_ID} Approved",
                             body: """
                                 Hello Team,<br><br>
