@@ -9,3 +9,7 @@ module "create_cr" {
   assignment_group  = var.assignment_group
   requested_by      = var.requested_by
 }
+
+output "cr_id" {
+  value = module.create_cr.cr_id
+}
