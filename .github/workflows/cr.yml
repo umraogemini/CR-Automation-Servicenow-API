@@ -1,4 +1,4 @@
-## GitHub Actions to Trigger CRs - Automatically creates a CR when a GitHub PR is opened 
+// GitHub Actions for CR Creation - Automatically creates a CR when a GitHub PR is opened
 name: Create CR on PR
 on:
   pull_request:
@@ -16,8 +16,7 @@ jobs:
 
       - name: Terraform Init & Apply
         env:
-          TF_VAR_servicenow_username: ${{ secrets.SNOW_USER }}
-          TF_VAR_servicenow_password: ${{ secrets.SNOW_PASS }}
+          TF_VAR_minion_api_token: ${{ secrets.MINION_API_TOKEN }}
         run: |
           terraform init
           terraform apply -auto-approve
