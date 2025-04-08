@@ -1,4 +1,4 @@
-## Terraform Root Module to Call CR Module - Calls the reusable CR module
+// Terraform Root Module to Call CR Module - Calls the reusable CR module
 module "create_cr" {
   source            = "./modules/servicenow_cr"
   short_description = "Automated CR via Terraform"
