@@ -1,30 +1,50 @@
-// File: variables.tf
-variable "servicenow_instance" {
-  description = "ServiceNow instance URL"
+// File: modules/servicenow_cr/variables.tf
+variable "short_description" {
+  description = "Short description for the CR"
   type        = string
-  default     = "https://hsbcitidu.service-now.com/servicenow"
+  default     = "Automation CR creation Using ServiceNow"
 }
 
-variable "servicenow_username" {
-  description = "ServiceNow API username"
+variable "description" {
+  description = "Detailed description for the CR"
   type        = string
-  sensitive   = true
+  default     = "Automated Change Request creation and approval via Terraform. A GitHub pull request triggers the CR request, while Jenkins manages approval and sends email notification."
 }
 
-variable "servicenow_password" {
-  description = "ServiceNow API password"
+variable "risk" {
+  description = "Risk level of the CR"
   type        = string
-  sensitive   = true
+  default     = "low"
+}
+
+variable "impact" {
+  description = "Impact level of the CR"
+  type        = string
+  default     = "low"
 }
 
 variable "assignment_group" {
-  description = "Assignment group for CR"
+  description = "The assignment group for the CR"
   type        = string
   default     = "ET-FINEX-BFF-PEAK-IT"
 }
 
 variable "requested_by" {
-  description = "User requesting the CR"
+  description = "The user who requested the CR"
   type        = string
   default     = "uma.rao@noexternalmail.hsbc.com"
+}
+
+variable "servicenow_instance" {
+  type = string
+}
+
+variable "servicenow_username" {
+  type      = string
+  sensitive = true
+}
+
+variable "servicenow_password" {
+  type      = string
+  sensitive = true
 }
