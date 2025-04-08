@@ -1,23 +1,35 @@
-## Reusable CR Module - Creates & approves a ServiceNow CR using a module
-resource "servicenow_record" "change_request" {
-  table  = "change_request"
-  fields = {
+// Minion API Integration for CR Create CR using Minion API - Calls Minion API to create & approve CR
+resource "http_request" "create_cr" {
+  url = "${var.minion_api_url}/create-cr"
+  method = "POST"
+
+  request_headers = {
+    Content-Type  = "application/json"
+    Authorization = "Bearer ${var.minion_api_token}"
+  }
+
+  request_body = jsonencode({
     short_description = var.short_description
     description       = var.description
-    category         = var.category
-    risk            = var.risk
-    impact          = var.impact
+    risk             = var.risk
+    impact           = var.impact
     assignment_group = var.assignment_group
-    requested_by    = var.requested_by
-    state           = "new"
-  }
+  })
 }
 
-resource "servicenow_record" "approve_cr" {
-  table  = "change_request"
-  sys_id = servicenow_record.change_request.sys_id
-  fields = {
-    state = "approved"
+# 🔹 Approve CR using Minion API
+resource "http_request" "approve_cr" {
+  url = "${var.minion_api_url}/approve-cr"
+  method = "POST"
+
+  request_headers = {
+    Content-Type  = "application/json"
+    Authorization = "Bearer ${var.minion_api_token}"
   }
-  depends_on = [servicenow_record.change_request]
+
+  request_body = jsonencode({
+    cr_id = http_request.create_cr.response_body.cr_id
+  })
+
+  depends_on = [http_request.create_cr]
 }
