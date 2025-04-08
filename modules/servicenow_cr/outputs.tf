@@ -1,5 +1,5 @@
-// Module Outputs - Outputs CR ID for tracking
+// File: modules/servicenow_cr/outputs.tf
 output "cr_id" {
   description = "The ID of the created Change Request"
-  value       = http_request.create_cr.response_body.cr_id
+  value       = servicenow_change_request.cr.sys_id
 }
