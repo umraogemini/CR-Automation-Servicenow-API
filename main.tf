@@ -7,7 +7,7 @@ module "create_cr" {
   risk            = "low"
   impact          = "low"
   assignment_group = var.assignment_group
-  requested_by    = "umrao@example.com"
+  requested_by    = "var.requested_by"
 }
 
 output "cr_id" {
