@@ -11,12 +11,6 @@ pipeline {
     }
 
     stages {
-        stage('Checkout code') {
-            steps {
-                git 'https://github.com/your-repo/terraform-servicenow-cr.git'
-            }
-        }
-
         stage('Init Terraform') {
             steps {
                 sh 'terraform init'
