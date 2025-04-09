@@ -1,6 +1,6 @@
 // File: modules/servicenow_cr/main.tf
 resource "http_request" "create_cr" {
-  url    = "${var.servicenow_instance}/api/now/table/change_request"
+  url    = "${var.servicenow_instance}/api/now/table/change_request" // add files
   method = "POST"
 
   request_headers = {
