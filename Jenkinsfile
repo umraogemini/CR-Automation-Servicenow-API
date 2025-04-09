@@ -10,6 +10,13 @@ pipeline {
         SERVICENOW_INSTANCE = "https://hsbcitidu.service-now.com/servicenow"
     }
 
+stages {
+        stage('Checkout code') {
+            steps {
+                git 'https://github.com/your-repo/terraform-servicenow-cr.git'
+            }
+        }
+
     stages {
         stage('Init Terraform') {
             steps {
