@@ -1,50 +1,23 @@
-// File: modules/servicenow_cr/variables.tf
-variable "short_description" {
-  description = "Short description for the CR"
-  type        = string
-  default     = "Automation CR creation Using ServiceNow"
-}
+// File: .github/workflows/cr.yml
+name: Create CR on PR
+on:
+  pull_request:
+    types: [opened]
 
-variable "description" {
-  description = "Detailed description for the CR"
-  type        = string
-  default     = "Automated Change Request creation and approval via Terraform. A GitHub pull request triggers the CR request, while Jenkins manages approval and sends email notification."
-}
+jobs:
+  create-cr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
 
-variable "risk" {
-  description = "Risk level of the CR"
-  type        = string
-  default     = "low"
-}
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
 
-variable "impact" {
-  description = "Impact level of the CR"
-  type        = string
-  default     = "low"
-}
-
-variable "assignment_group" {
-  description = "The assignment group for the CR"
-  type        = string
-  default     = "ET-FINEX-BFF-PEAK-IT"
-}
-
-variable "requested_by" {
-  description = "The user who requested the CR"
-  type        = string
-  default     = "uma.rao@noexternalmail.hsbc.com"
-}
-
-variable "servicenow_instance" {
-  type = string
-}
-
-variable "servicenow_username" {
-  type      = string
-  sensitive = true
-}
-
-variable "servicenow_password" {
-  type      = string
-  sensitive = true
-}
+      - name: Terraform Init & Apply
+        env:
+          TF_VAR_servicenow_username: ${{ secrets.SNOW_USER }}
+          TF_VAR_servicenow_password: ${{ secrets.SNOW_PASS }}
+        run: |
+          terraform init
+          terraform apply -auto-approve
