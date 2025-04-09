@@ -7,9 +7,9 @@ pipeline {
     }
 
     environment {
-        SERVICENOW_INSTANCE = "https://gemini.service-now.com/servicenow"
-        TF_VAR_servicenow_username = credentials('SNOW_USER')
-        TF_VAR_servicenow_password = credentials('SNOW_PASS')
+        SERVICENOW_INSTANCE = "https://hsbcitidu.service-now.com/servicenow"
+        TF_VAR_servicenow_username = credentials('servicenow-api-basic')
+        TF_VAR_servicenow_password = credentials('servicenow-api-basic')
     }
 
     stages {
@@ -17,6 +17,7 @@ pipeline {
             steps {
                 script {
                     sh 'terraform apply -auto-approve'
+
                     env.CR_ID = sh(script: "terraform output -raw cr_id", returnStdout: true).trim()
                     echo "Captured CR ID: ${env.CR_ID}"
                 }
