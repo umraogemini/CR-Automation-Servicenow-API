@@ -8,16 +8,25 @@ pipeline {
 
     environment {
         SERVICENOW_INSTANCE = "https://hsbcitidu.service-now.com/servicenow"
-        TF_VAR_servicenow_username = credentials('servicenow-api-basic')
-        TF_VAR_servicenow_password = credentials('servicenow-api-basic')
     }
 
     stages {
+        stage('Init Terraform') {
+            steps {
+                sh 'terraform init'
+            }
+        }
+
+        stage('Plan Terraform') {
+            steps {
+                sh 'terraform plan -out=tfplan'
+            }
+        }
+
         stage('Terraform Apply') {
             steps {
                 script {
                     sh 'terraform apply -auto-approve'
-
                     env.CR_ID = sh(script: "terraform output -raw cr_id", returnStdout: true).trim()
                     echo "Captured CR ID: ${env.CR_ID}"
                 }
@@ -30,30 +39,36 @@ pipeline {
             }
             steps {
                 script {
-                    def crStatus = sh(
-                        script: "curl -s -u '${env.TF_VAR_servicenow_username}:${env.TF_VAR_servicenow_password}' " +
-                                "-X GET '${SERVICENOW_INSTANCE}/api/now/table/change_request/${env.CR_ID}' " +
-                                "| jq -r '.result.state'",
-                        returnStdout: true
-                    ).trim()
+                    withCredentials([usernamePassword(
+                        credentialsId: 'servicenow-api-basic',
+                        usernameVariable: 'SN_USER',
+                        passwordVariable: 'SN_PASS'
+                    )]) {
+                        def crStatus = sh(
+                            script: "curl -s -u '${SN_USER}:${SN_PASS}' " +
+                                    "-X GET '${SERVICENOW_INSTANCE}/api/now/table/change_request/${env.CR_ID}' " +
+                                    "| jq -r '.result.state'",
+                            returnStdout: true
+                        ).trim()
 
-                    echo "CR Status: ${crStatus}"
+                        echo "CR Status: ${crStatus}"
 
-                    if (crStatus == "approved") {
-                        emailext (
-                            subject: "Change Request ${env.CR_ID} Approved",
-                            body: """
-                                Hello Team,<br><br>
-                                The Change Request <b>${env.CR_ID}</b> has been <b>approved</b>.<br>
-                                Please proceed with the deployment.<br><br>
-                                Regards,<br>
-                                DevOps Team
-                            """,
-                            mimeType: 'text/html',
-                            to: 'uma.rao@noexternalmail.hsbc.com'
-                        )
-                    } else {
-                        echo "CR not approved yet!"
+                        if (crStatus == "approved") {
+                            emailext(
+                                subject: "Change Request ${env.CR_ID} Approved",
+                                body: """
+                                    Hello Team,<br><br>
+                                    The Change Request <b>${env.CR_ID}</b> has been <b>approved</b>.<br>
+                                    Please proceed with the deployment.<br><br>
+                                    Regards,<br>
+                                    DevOps Team
+                                """,
+                                mimeType: 'text/html',
+                                to: 'uma.rao@noexternalmail.hsbc.com'
+                            )
+                        } else {
+                            echo "CR not approved yet!"
+                        }
                     }
                 }
             }
