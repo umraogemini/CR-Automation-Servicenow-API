@@ -1,4 +1,4 @@
-## Variable Values - Stores sensitive credentials (use Vault, AWS Secrets Manager, etc.)
+// File: terraform.tfvars
 servicenow_instance = "https://hsbcitidu.service-now.com/servicenow"
 servicenow_username = "your-username"
 servicenow_password = "your-password"
