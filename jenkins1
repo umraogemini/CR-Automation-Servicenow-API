@@ -13,7 +13,7 @@ properties([
 ])
 
 def PIPELINE_ID = "pipeline-" + UUID.randomUUID().toString()
-def GCP_SA_KEY_ID = "${params.BUILD_SA}${params.GCP_PROJECT_ID}"
+def GCP_SA_KEY_ID = "${params.BUILD_SA}_${params.GCP_PROJECT_ID}"
 
 pipeline {
     agent { label "gcp-bffpeak-jenkins-slave" }
