@@ -117,13 +117,14 @@ pipeline {
             }
             steps {
                 script {
+                    echo "CR ID to be checked: ${env.CR_ID}"
                     withCredentials([usernamePassword(
                         credentialsId: 'servicenow-api-basic',
                         usernameVariable: 'SNOW_USER',
                         passwordVariable: 'SNOW_PASS'
                     )]) {
                         def crStatus = sh(
-                            script: "curl -s -u '${SN_USER}:${SN_PASS}' " +
+                            script: "curl -s -u '${SNOW_USER}:${SNOW_PASS}' " +
                                     "-X GET '${SERVICENOW_INSTANCE}/api/now/table/change_request/${env.CR_ID}' " +
                                     "| jq -r '.result.state'",
                             returnStdout: true
