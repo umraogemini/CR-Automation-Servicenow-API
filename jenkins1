@@ -2,11 +2,11 @@ properties([
     [$class: 'RebuildSettings', autoRebuild: false, rebuildDisabled: false],
     buildDiscarder(logRotator(daysToKeepStr: '7', numToKeepStr: '10')),
     parameters([
-        choice(name: 'GCP_PROJECT_ID', choices: projectList, defaultValue: '', description: 'Google Cloud Project'),
+        choice(name: 'GCP_PROJECT_ID', choices: ['hsbc-12609073-peakplatuat-dev', 'project2', 'project3'], defaultValue: 'hsbc-12609073-peakplatuat-dev', description: 'Google Cloud Project'),
         string(name: 'BUILD_SA', defaultValue: 'automation-deployment', description: 'GCP Service Account', trim: true),
         string(name: 'ENVIRONMENT', defaultValue: 'DEV', description: 'GCP Project Environment', trim: true),
-        choice(name: 'TF_MODULE', choices: locationList, defaultValue: '', description: 'Terraform Module Location'),
-        choice(name: 'GCP_REGION', choices: regionList, defaultValue: '', description: 'GCP Region'),
+        choice(name: 'TF_MODULE', choices: ['CR-Automation-Servicenow-API', 'module2', 'module3'], defaultValue: 'CR-Automation-Servicenow-API', description: 'Terraform Module Location'),
+        choice(name: 'GCP_REGION', choices: ['us-central1', 'us-east1', 'us-west1'], defaultValue: 'us-central1', description: 'GCP Region'),
         choice(name: 'TF_ACTION', choices: ['plan', 'apply', 'destroy'], defaultValue: 'plan', description: 'Terraform Action'),
         booleanParam(name: 'SKIP_CP_CHECK', defaultValue: false, description: 'Skip CR Approval Check')
     ])
@@ -82,7 +82,6 @@ pipeline {
                                             sh "terraform destroy -auto-approve -no-color -var-file=${tfVarsFile} -var project_id=${params.GCP_PROJECT_ID}"
                                         }
 
-                                        // CR ID capture section updated with extra echo
                                         env.CR_ID = sh(script: "terraform output -raw cr_id", returnStdout: true).trim()
                                         echo "Captured CR ID: ${env.CR_ID}"
                                         echo "CR ID to be checked: ${env.CR_ID}"
