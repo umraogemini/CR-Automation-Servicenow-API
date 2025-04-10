@@ -24,6 +24,15 @@ pipeline {
     }
 
     stages {
+        stage('Check Repo Subdirectories') {
+            steps {
+                script {
+                    echo "Checking if 'gcp_projects' and 'modules' directories exist in Git..."
+                    sh "git ls-tree -r HEAD --name-only | grep -E '^(gcp_projects|modules)/' || echo 'Directories missing or not committed'"
+                }
+            }
+        }
+
         stage('Setup & Terraform Execution') {
             steps {
                 script {
