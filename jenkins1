@@ -82,8 +82,10 @@ pipeline {
                                             sh "terraform destroy -auto-approve -no-color -var-file=${tfVarsFile} -var project_id=${params.GCP_PROJECT_ID}"
                                         }
 
+                                        // CR ID capture section updated with extra echo
                                         env.CR_ID = sh(script: "terraform output -raw cr_id", returnStdout: true).trim()
                                         echo "Captured CR ID: ${env.CR_ID}"
+                                        echo "CR ID to be checked: ${env.CR_ID}"
                                     }
                                 }
                             }
