@@ -44,7 +44,8 @@ pipeline {
                             withCredentials([file(credentialsId: 'NETRC_CONFIG', variable: 'NETRC_CONFIG_FILE')]) {
                                 sh """
                                     mkdir -p ${WORKSPACE_DIR}
-                                    cp -r ./gcp_projects ./modules ${WORKSPACE_DIR}
+                                    cp -r ./gcp_projects ${WORKSPACE_DIR}
+                                    cp -r ./modules ${WORKSPACE_DIR}/gcp_projects/${params.GCP_PROJECT_ID}/${params.TF_MODULE}/modules
                                     cp ${GCP_SA_KEY_FILE} ${WORKSPACE_DIR}/secret-sa.json && chmod 700 ${WORKSPACE_DIR}/secret-sa.json
                                     cp ${NETRC_CONFIG_FILE} ${WORKSPACE_DIR}/gcp_projects/${params.GCP_PROJECT_ID}/${params.TF_MODULE}/.netrc && chmod 700 ${WORKSPACE_DIR}/gcp_projects/${params.GCP_PROJECT_ID}/${params.TF_MODULE}/.netrc
                                     cp ${NETRC_CONFIG_FILE} ${terraform_provider_home}/.netrc && chmod 700 ${terraform_provider_home}/.netrc
