@@ -1,41 +1,141 @@
+properties([
+    [$class: 'RebuildSettings', autoRebuild: false, rebuildDisabled: false],
+    buildDiscarder(logRotator(daysToKeepStr: '7', numToKeepStr: '10')),
+    parameters([
+        choice(name: 'GCP_PROJECT_ID', choices: projectList, defaultValue: '', description: 'Google Cloud Project'),
+        string(name: 'BUILD_SA', defaultValue: 'automation-deployment', description: 'GCP Service Account', trim: true),
+        string(name: 'ENVIRONMENT', defaultValue: 'DEV', description: 'GCP Project Environment', trim: true),
+        choice(name: 'TF_MODULE', choices: locationList, defaultValue: '', description: 'Terraform Module Location'),
+        choice(name: 'GCP_REGION', choices: regionList, defaultValue: '', description: 'GCP Region'),
+        choice(name: 'TF_ACTION', choices: ['plan', 'apply', 'destroy'], defaultValue: 'plan', description: 'Terraform Action'),
+        booleanParam(name: 'SKIP_CP_CHECK', defaultValue: false, description: 'Skip CR Approval Check')
+    ])
+])
+
+def PIPELINE_ID = "pipeline-" + UUID.randomUUID().toString()
+def GCP_SA_KEY_ID = "${params.BUILD_SA}${params.GCP_PROJECT_ID}"
+
 pipeline {
-    agent any
+    agent { label "gcp-bffpeak-jenkins-slave" }
+
     environment {
-        SERVICENOW_INSTANCE = "https://gemini.service-now.com/servicenow"
-        TF_VAR_servicenow_username = credentials('SNOW_USER')
-        TF_VAR_servicenow_password = credentials('SNOW_PASS')
+        SERVICENOW_INSTANCE = "https://hsbcitidu.service-now.com/servicenow"
+        terraform_provider_home = "/hsbc/terraform_provider"
     }
+
     stages {
-        stage('Terraform Apply') {
-            steps {
-                sh 'terraform apply -auto-approve'
-            }
-        }
-        stage('Check CR Approval & Notify') {
+        stage('Setup & Terraform Execution') {
             steps {
                 script {
-                    def crStatus = sh(script: "curl -s -u '${env.TF_VAR_servicenow_username}:${env.TF_VAR_servicenow_password}' \
-                        -X GET '${SERVICENOW_INSTANCE}/api/now/table/change_request/${CR_ID}' \
-                        | jq -r '.result.state'", returnStdout: true).trim()
+                    try {
+                        def WORKSPACE_DIR = "${env.WORKSPACE}/${PIPELINE_ID}"
+                        def tfVarsFile = "${params.ENVIRONMENT}.tfvars"
 
-                    if (crStatus == "approved") {
-                        emailext (
-                            subject: "Change Request ${CR_ID} Approved",
-                            body: """
-                                Hello Team,<br><br>
-                                The Change Request <b>${CR_ID}</b> has been <b>approved</b>.<br>
-                                Please proceed with the deployment.<br><br>
-                                Regards,<br>
-                                DevOps Team
-                            """,
-                            mimeType: 'text/html',
-                            to: 'team@example.com'
-                        )
-                    } else {
-                        echo "CR not approved yet!"
+                        withCredentials([file(credentialsId: "${GCP_SA_KEY_ID}", variable: 'GCP_SA_KEY_FILE')]) {
+                            withCredentials([file(credentialsId: 'NETRC_CONFIG', variable: 'NETRC_CONFIG_FILE')]) {
+                                sh """
+                                    mkdir -p ${WORKSPACE_DIR}
+                                    cp -r ./gcp_projects ./modules ${WORKSPACE_DIR}
+                                    cp ${GCP_SA_KEY_FILE} ${WORKSPACE_DIR}/secret-sa.json && chmod 700 ${WORKSPACE_DIR}/secret-sa.json
+                                    cp ${NETRC_CONFIG_FILE} ${WORKSPACE_DIR}/gcp_projects/${params.GCP_PROJECT_ID}/${params.TF_MODULE}/.netrc && chmod 700 ${WORKSPACE_DIR}/gcp_projects/${params.GCP_PROJECT_ID}/${params.TF_MODULE}/.netrc
+                                    cp ${NETRC_CONFIG_FILE} ${terraform_provider_home}/.netrc && chmod 700 ${terraform_provider_home}/.netrc
+                                """
+
+                                dir("${WORKSPACE_DIR}/gcp_projects/${params.GCP_PROJECT_ID}/${params.TF_MODULE}") {
+                                    withEnv([
+                                        "GOOGLE_APPLICATION_CREDENTIALS=${WORKSPACE_DIR}/secret-sa.json",
+                                        "HOME=${terraform_provider_home}",
+                                        "HTTP_PROXY=http://googleapis-dev.gcp.cloud.uk.hsbc:3128",
+                                        "HTTPS_PROXY=http://googleapis-dev.gcp.cloud.uk.hsbc:3128",
+                                        "NO_PROXY=.hsbc"
+                                    ]) {
+                                        if (params.TF_MODULE == "tfstate-bucket") {
+                                            echo "Using local tfstate for module: ${params.TF_MODULE}"
+                                            sh 'terraform init -upgrade=false -no-color'
+                                        } else {
+                                            sh """
+                                                sed -i 's/.local./backend "gcs" {}/' backend.tf
+                                                terraform init -no-color -force-copy -get=true -lock=true -input=false -backend=true \
+                                                    -backend-config="bucket=${params.GCP_PROJECT_ID}-${params.GCP_REGION}-terraform" \
+                                                    -backend-config="prefix=terraform-${params.TF_MODULE}-${params.ENVIRONMENT}"
+                                            """
+                                        }
+
+                                        sh 'terraform validate -no-color'
+                                        sh "terraform workspace select ${params.ENVIRONMENT} 2>/dev/null || terraform workspace new ${params.ENVIRONMENT}"
+
+                                        if (params.TF_ACTION == "apply") {
+                                            sh "terraform apply -auto-approve -no-color -var-file=${tfVarsFile} -var project_id=${params.GCP_PROJECT_ID}"
+                                        } else if (params.TF_ACTION == "plan") {
+                                            sh "terraform plan -out=tfplan -no-color -var-file=${tfVarsFile} -var project_id=${params.GCP_PROJECT_ID}"
+                                        } else {
+                                            sh "terraform destroy -auto-approve -no-color -var-file=${tfVarsFile} -var project_id=${params.GCP_PROJECT_ID}"
+                                        }
+
+                                        env.CR_ID = sh(script: "terraform output -raw cr_id", returnStdout: true).trim()
+                                        echo "Captured CR ID: ${env.CR_ID}"
+                                    }
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        currentBuild.result = 'FAILURE'
+                        error("Error occurred: ${e}")
+                    } finally {
+                        sh "rm -rf ${env.WORKSPACE}/${PIPELINE_ID}"
                     }
                 }
             }
+        }
+
+        stage('Check CR Approval & Notify') {
+            when {
+                allOf {
+                    expression { return !params.SKIP_CP_CHECK }
+                    expression { return env.CR_ID?.trim() }
+                }
+            }
+            steps {
+                script {
+                    withCredentials([usernamePassword(
+                        credentialsId: 'servicenow-api-basic',
+                        usernameVariable: 'SN_USER',
+                        passwordVariable: 'SN_PASS'
+                    )]) {
+                        def crStatus = sh(
+                            script: "curl -s -u '${SN_USER}:${SN_PASS}' " +
+                                    "-X GET '${SERVICENOW_INSTANCE}/api/now/table/change_request/${env.CR_ID}' " +
+                                    "| jq -r '.result.state'",
+                            returnStdout: true
+                        ).trim()
+
+                        echo "CR Status: ${crStatus}"
+
+                        if (crStatus == "approved") {
+                            emailext(
+                                subject: "Change Request ${env.CR_ID} Approved",
+                                body: """
+                                    Hello Team,<br><br>
+                                    The Change Request <b>${env.CR_ID}</b> has been <b>approved</b>.<br>
+                                    Please proceed with the deployment.<br><br>
+                                    Regards,<br>
+                                    DevOps Team
+                                """,
+                                mimeType: 'text/html',
+                                to: 'uma.rao@noexternalmail.hsbc.com'
+                            )
+                        } else {
+                            echo "CR not approved yet!"
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
         }
     }
 }
