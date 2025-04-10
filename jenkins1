@@ -119,8 +119,8 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(
                         credentialsId: 'servicenow-api-basic',
-                        usernameVariable: 'SN_USER',
-                        passwordVariable: 'SN_PASS'
+                        usernameVariable: 'SNOW_USER',
+                        passwordVariable: 'SNOW_PASS'
                     )]) {
                         def crStatus = sh(
                             script: "curl -s -u '${SN_USER}:${SN_PASS}' " +
