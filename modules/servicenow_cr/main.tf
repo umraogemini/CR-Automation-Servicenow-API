@@ -1,11 +1,12 @@
 // File: modules/servicenow_cr/main.tf
-resource "http_request" "create_cr" {
-  url    = "${var.servicenow_instance}/api/now/table/change_request" // add files
+
+data "http" "create_cr" {
+  url    = "${var.servicenow_instance}/api/now/table/change_request"
   method = "POST"
 
   request_headers = {
     Content-Type  = "application/json"
-    Authorization = "Basic ${base64encode("${var.servicenow_username}:${var.servicenow_password}")}" 
+    Authorization = "Basic ${base64encode("${var.servicenow_username}:${var.servicenow_password}")}"
   }
 
   request_body = jsonencode({
@@ -18,6 +19,10 @@ resource "http_request" "create_cr" {
   })
 }
 
+locals {
+  cr_response = jsondecode(data.http.create_cr.response_body)
+}
+
 output "cr_id" {
-  value = jsondecode(http_request.create_cr.response_body).result.sys_id
+  value = local.cr_response.result.sys_id
 }
