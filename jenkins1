@@ -43,18 +43,14 @@ pipeline {
                         withCredentials([file(credentialsId: "${GCP_SA_KEY_ID}", variable: 'GCP_SA_KEY_FILE')]) {
                             withCredentials([file(credentialsId: 'NETRC_CONFIG', variable: 'NETRC_CONFIG_FILE')]) {
                                 sh """
-                                    mkdir -p ${WORKSPACE_DIR}/${params.TF_MODULE}
-                                    cp ${GCP_SA_KEY_FILE} ${WORKSPACE_DIR}/secret-sa.json && chmod 700 ${WORKSPACE_DIR}/secret-sa.json
-                                    cp ${NETRC_CONFIG_FILE} ${WORKSPACE_DIR}/${params.TF_MODULE}/.netrc && chmod 700 ${WORKSPACE_DIR}/${params.TF_MODULE}/.netrc
-                                    cp ${NETRC_CONFIG_FILE} ${terraform_provider_home}/.netrc && chmod 700 ${terraform_provider_home}/.netrc
-                                    cp -r modules/${params.TF_MODULE}/* ${WORKSPACE_DIR}/${params.TF_MODULE}
-                                    cp ${tfVarsFile} ${WORKSPACE_DIR}/${params.TF_MODULE}
-                                    cp main.tf ${WORKSPACE_DIR}/${params.TF_MODULE}
-                                    cp providers.tf ${WORKSPACE_DIR}/${params.TF_MODULE}
-                                    cp outputs.tf ${WORKSPACE_DIR}/${params.TF_MODULE}
-                                    cp variables.tf ${WORKSPACE_DIR}/${params.TF_MODULE}
-                                    cp version.tf ${WORKSPACE_DIR}/${params.TF_MODULE}
-                                    cp backend.tf ${WORKSPACE_DIR}/${params.TF_MODULE}
+                                    mkdir -p /build/workspace/Finance_IT/BFF/peak-devops-tools/CR-Automation-Servicenow-API/pipeline-beee56d7-3248-4420-abb4-42f4eef0fbf7/CR-Automation-Servicenow-API
+                                    cp /build/workspace/Finance_IT/BFF/peak-devops-tools/CR-Automation-Servicenow-API/pipeline-beee56d7-3248-4420-abb4-42f4eef0fbf7/secret-sa.json /build/workspace/Finance_IT/BFF/peak-devops-tools/CR-Automation-Servicenow-API/pipeline-beee56d7-3248-4420-abb4-42f4eef0fbf7/CR-Automation-Servicenow-API/
+                                    chmod 700 /build/workspace/Finance_IT/BFF/peak-devops-tools/CR-Automation-Servicenow-API/pipeline-beee56d7-3248-4420-abb4-42f4eef0fbf7/secret-sa.json
+                                    cp /build/workspace/Finance_IT/BFF/peak-devops-tools/CR-Automation-Servicenow-API/pipeline-beee56d7-3248-4420-abb4-42f4eef0fbf7/CR-Automation-Servicenow-API/.netrc /build/workspace/Finance_IT/BFF/peak-devops-tools/CR-Automation-Servicenow-API/pipeline-beee56d7-3248-4420-abb4-42f4eef0fbf7/CR-Automation-Servicenow-API/
+                                    chmod 700 /build/workspace/Finance_IT/BFF/peak-devops-tools/CR-Automation-Servicenow-API/pipeline-beee56d7-3248-4420-abb4-42f4eef0fbf7/CR-Automation-Servicenow-API/.netrc
+                                    cp /hsbc/terraform_provider/.netrc /build/workspace/Finance_IT/BFF/peak-devops-tools/CR-Automation-Servicenow-API/pipeline-beee56d7-3248-4420-abb4-42f4eef0fbf7/CR-Automation-Servicenow-API/
+                                    chmod 700 /hsbc/terraform_provider/.netrc
+                                    cp -r modules/servicenow_cr/* /build/workspace/Finance_IT/BFF/peak-devops-tools/CR-Automation-Servicenow-API/pipeline-beee56d7-3248-4420-abb4-42f4eef0fbf7/CR-Automation-Servicenow-API/
                                 """
 
                                 dir("${WORKSPACE_DIR}/${params.TF_MODULE}") {
