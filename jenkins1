@@ -88,6 +88,16 @@ pipeline {
             }
         }
 
+        stage('Debug Info') {
+            steps {
+                script {
+                    echo "Current working directory: ${pwd()}"
+                }
+                sh 'ls -l'
+                sh "ls -l ${env.WORKSPACE}/${PIPELINE_ID}"
+            }
+        }
+
         stage('Check CR Approval & Notify') {
             when {
                 allOf {
