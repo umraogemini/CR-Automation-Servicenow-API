@@ -55,3 +55,10 @@ Go to the "Pipeline" section and select "Pipeline script from SCM".
 
 Choose "Git" and enter your GitHub repo URL.
 
+Corrected Version:
+
+As per your suggestions, I have updated the text field on the Terraform side, and it is now reflected in the email notifications as well. I have also ensured that each alert has a different text field.
+
+Please find the screenshot below for your reference.
+
+If any modifications are required on the Terraform side or in the text fields, please let me know so I can make the changes. If everything looks good, I will proceed to deploy the code in the UAT and Production environments.
